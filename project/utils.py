@@ -2,6 +2,8 @@ import nltk
 import pickle
 import re
 import numpy as np
+from gensim.models import KeyedVectors
+import os
 
 nltk.download('stopwords')
 from nltk.corpus import stopwords
@@ -41,20 +43,13 @@ def load_embeddings(embeddings_path):
       embeddings - dict mapping words to vectors;
       embeddings_dim - dimension of the vectors.
     """
+
+    # this will load it in np.float32 type for the numbers in the embedding vectors
+    embeddings = KeyedVectors.load_word2vec_format(embeddings_path, binary=False)
     
-    # Hint: you have already implemented a similar routine in the 3rd assignment.
-    # Note that here you also need to know the dimension of the loaded embeddings.
-    # When you load the embeddings, use numpy.float32 type as dtype
-
-    ########################
-    #### YOUR CODE HERE ####
-    ########################
-
-    # remove this when you're done
-    raise NotImplementedError(
-        "Open utils.py and fill with your code. In case of Google Colab, download"
-        "(https://github.com/hse-aml/natural-language-processing/blob/master/project/utils.py), "
-        "edit locally and upload using '> arrow on the left edge' -> Files -> UPLOAD")
+    dim = embeddings[embeddings.index2word[0]].size
+    
+    return embeddings, dim
 
 
 def question_to_vec(question, embeddings, dim):
@@ -62,15 +57,18 @@ def question_to_vec(question, embeddings, dim):
     
     # Hint: you have already implemented exactly this function in the 3rd assignment.
 
-    ########################
-    #### YOUR CODE HERE ####
-    ########################
-
-    # remove this when you're done
-    raise NotImplementedError(
-        "Open utils.py and fill with your code. In case of Google Colab, download"
-        "(https://github.com/hse-aml/natural-language-processing/blob/master/project/utils.py), "
-        "edit locally and upload using '> arrow on the left edge' -> Files -> UPLOAD")
+    start_vector = np.zeros(dim)
+    counter = 0
+    for word in question.split():
+        try:
+            word_embedding = embeddings[word]
+            counter += 1
+            start_vector = start_vector + word_embedding
+        except KeyError as e:
+            if 'not in vocabulary' in str(e):
+                pass
+    mean_vector = start_vector / counter if counter > 0 else start_vector
+    return mean_vector
 
 
 def unpickle_file(filename):
