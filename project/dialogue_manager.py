@@ -24,10 +24,14 @@ class ThreadRanker(object):
             The search is performed across the threads with a given tag.
         """
         thread_ids, thread_embeddings = self.__load_embeddings_by_tag(tag_name)
-       
+        
+        indices = np.random.randint(0, thread_ids.shape[0], 100000)
+        thread_ids_sample = thread_ids[indices,]
+        thread_embeddings_sample = thread_embeddings[indices,]
+        
         question_vec = question_to_vec(question, self.word_embeddings, self.embeddings_dim)
         
-        min_dist = pairwise_distances_argmin(question_vec.reshape(1, -1), thread_embeddings, axis=1, metric='cosine')
+        min_dist = pairwise_distances_argmin(question_vec.reshape(1, -1), thread_embeddings_sample, axis=1, metric='cosine')
         
         best_thread = min_dist[0]
         
@@ -41,7 +45,7 @@ class ThreadRanker(object):
         #print('result:', result)
         #best_thread = result
         
-        return thread_ids[best_thread]
+        return thread_ids_sample[best_thread]
 
 
 class DialogueManager(object):
