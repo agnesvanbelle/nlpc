@@ -1,5 +1,5 @@
 import os
-from sklearn.metrics.pairwise import pairwise_distances_argmin
+from sklearn.metrics.pairwise import pairwise_distances_argmin, cosine_similarity
 
 from chatterbot import ChatBot
 from chatterbot.trainers import ChatterBotCorpusTrainer, ListTrainer
@@ -27,9 +27,19 @@ class ThreadRanker(object):
        
         question_vec = question_to_vec(question, self.word_embeddings, self.embeddings_dim)
         
-        min_dist = pairwise_distances_argmin(question_vec.reshape(1, -1), thread_embeddings, axis=1, metric='cosine')
-                                  
-        best_thread = min_dist[0]
+        #min_dist = pairwise_distances_argmin(question_vec.reshape(1, -1), thread_embeddings, axis=1, metric='cosine')
+                
+        sims = cosine_similarity(question_vec.reshape(1, -1), thread_embeddings)
+        sims = sims.squeeze().tolist()
+        
+        #print('sims len:', len(sims))
+        
+        result = [c[0] for c in 
+                  sorted(enumerate(sims), key = lambda x: x[1], reverse=True)
+             ][0]
+         
+        #print('result:', result)
+        best_thread = result
         
         return thread_ids[best_thread]
 
