@@ -48,9 +48,8 @@ class DialogueManager(object):
     def __init__(self, paths):
         print("Loading resources...")
         
-        self.paths = paths
-        self.intent_recognizer = unpickle_file(self.paths['INTENT_RECOGNIZER'])
-        self.tfidf_vectorizer = unpickle_file(self.paths['TFIDF_VECTORIZER'])
+        self.intent_recognizer = unpickle_file(paths['INTENT_RECOGNIZER'])
+        self.tfidf_vectorizer = unpickle_file(paths['TFIDF_VECTORIZER'])
         
         self.ANSWER_TEMPLATE = "I think its about {:s}.\n" + \
                     "For this problem this thread might help you: https://stackoverflow.com/questions/{:d} "
@@ -94,8 +93,6 @@ class DialogueManager(object):
         """Combines stackoverflow and chitchat parts using intent recognition."""
         
         # Intent recognition
-        
-        ## Load pickled files here to save memory
         prepared_question = text_prepare(question)
         features = self.tfidf_vectorizer.transform([prepared_question])
         intent = self.intent_recognizer.predict(features)[0]
