@@ -5,9 +5,9 @@ from chatterbot import ChatBot
 from chatterbot.trainers import ChatterBotCorpusTrainer, ListTrainer
 from chatterbot.response_selection import get_random_response
 
-
 from utils import *
 
+MAX_TAGS_TO_LOAD = 150000
 
 class ThreadRanker(object):
     def __init__(self, paths):
@@ -25,7 +25,7 @@ class ThreadRanker(object):
         """
         thread_ids, thread_embeddings = self.__load_embeddings_by_tag(tag_name)
         
-        indices = np.random.randint(0, thread_ids.shape[0], 100000)
+        indices = np.random.randint(0, thread_ids.shape[0], MAX_TAGS_TO_LOAD)
         thread_ids_sample = thread_ids[indices,]
         thread_embeddings_sample = thread_embeddings[indices,]
         
@@ -80,7 +80,14 @@ class DialogueManager(object):
                              ], response_selection_method=get_random_response)
         
         trainer = ChatterBotCorpusTrainer(self.bot)
-        trainer.train('chatterbot.corpus.english')
+        # Don't train on the whole corpus, only relevant parts, to be faster when replying
+        trainer.train(  'chatterbot.corpus.english.greetings',
+                        'chatterbot.corpus.english.conversations',
+                        'chatterbot.corpus.english.psychology',
+                        'chatterbot.corpus.english.emotion',
+                        'chatterbot.corpus.english.science',
+                        'chatterbot.corpus.english.trivia',
+                        'chatterbot.corpus.english.botprofile')
         
         # Train also on the extra conversations we generated        
         data = open(list_train_data_path, encoding='utf-8').read()
@@ -92,7 +99,9 @@ class DialogueManager(object):
     def generate_answer(self, question):
         """Combines stackoverflow and chitchat parts using intent recognition."""
         
-        # Intent recognition:
+        # Intent recognition
+        
+        # Load pickled files here to save memory
         self.intent_recognizer = unpickle_file(self.paths['INTENT_RECOGNIZER'])
         self.tfidf_vectorizer = unpickle_file(self.paths['TFIDF_VECTORIZER'])
         
