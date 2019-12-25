@@ -4,10 +4,13 @@ from sklearn.metrics.pairwise import pairwise_distances_argmin, cosine_similarit
 from chatterbot import ChatBot
 from chatterbot.trainers import ChatterBotCorpusTrainer, ListTrainer
 from chatterbot.response_selection import get_random_response
+from chatterbot.comparisons import levenshtein_distance
 
 from utils import *
 
-MAX_TAGS_TO_LOAD = 150000
+# set to any value to limit the number of threads loaded per programming language
+# (to save memory)
+MAX_TRDS_TO_LOAD = None #150000
 
 class ThreadRanker(object):
     def __init__(self, paths):
@@ -25,27 +28,20 @@ class ThreadRanker(object):
         """
         thread_ids, thread_embeddings = self.__load_embeddings_by_tag(tag_name)
         
-        indices = np.random.randint(0, thread_ids.shape[0], MAX_TAGS_TO_LOAD)
-        thread_ids_sample = thread_ids[indices,]
-        thread_embeddings_sample = thread_embeddings[indices,]
-        
+        if MAX_TRDS_TO_LOAD is not None: # sample a predefined number of tags
+            indices = range(0, thread_ids.shape[0])
+            random_indices_choice = np.random.choice(indices, size=min(len(indices), MAX_TRDS_TO_LOAD), 
+                                                  replace=False)
+            thread_ids = thread_ids[random_indices_choice,]
+            thread_embeddings = thread_embeddings[random_indices_choice,]
+
         question_vec = question_to_vec(question, self.word_embeddings, self.embeddings_dim)
         
-        min_dist = pairwise_distances_argmin(question_vec.reshape(1, -1), thread_embeddings_sample, axis=1, metric='cosine')
+        min_dist = pairwise_distances_argmin(question_vec.reshape(1, -1), thread_embeddings, axis=1, metric='cosine')
         
         best_thread = min_dist[0]
         
-        #sims = cosine_similarity(question_vec.reshape(1, -1), thread_embeddings)
-        #sims = sims.squeeze().tolist()
-        #print('sims len:', len(sims))
-        #result = [c[0] for c in 
-        #          sorted(enumerate(sims), key = lambda x: x[1], reverse=True)
-        #     ][0]
-         
-        #print('result:', result)
-        #best_thread = result
-        
-        return thread_ids_sample[best_thread]
+        return thread_ids[best_thread]
 
 
 class DialogueManager(object):
@@ -53,6 +49,8 @@ class DialogueManager(object):
         print("Loading resources...")
         
         self.paths = paths
+        self.intent_recognizer = unpickle_file(self.paths['INTENT_RECOGNIZER'])
+        self.tfidf_vectorizer = unpickle_file(self.paths['TFIDF_VECTORIZER'])
         
         self.ANSWER_TEMPLATE = "I think its about {:s}.\n" + \
                     "For this problem this thread might help you: https://stackoverflow.com/questions/{:d} "
@@ -71,11 +69,12 @@ class DialogueManager(object):
         
         self.bot = ChatBot('My ChatBot', logic_adapters=[         
                                 {"import_path": "chatterbot.logic.BestMatch",
-                                 'maximum_similarity_threshold': 0.70
-                                },    
-                                # also support logical operations but with higher threshold
+                                 'maximum_similarity_threshold': 0.80,
+                                  "statement_comparison_function": levenshtein_distance                                                   }
+                                ,    
+                                # also support logical operations 
                                 {"import_path": 'chatterbot.logic.MathematicalEvaluation',
-                                 'maximum_similarity_threshold': 0.95
+                                 'maximum_similarity_threshold': 0.70
                                 }    
                              ], response_selection_method=get_random_response)
         
@@ -83,8 +82,8 @@ class DialogueManager(object):
         # Don't train on the whole corpus, only relevant parts, to be faster when replying
         trainer.train(  'chatterbot.corpus.english.greetings',
                         'chatterbot.corpus.english.conversations',
-                        'chatterbot.corpus.english.psychology',
                         'chatterbot.corpus.english.emotion',
+                        'chatterbot.corpus.english.psychology',
                         'chatterbot.corpus.english.science',
                         'chatterbot.corpus.english.trivia',
                         'chatterbot.corpus.english.botprofile')
@@ -101,14 +100,11 @@ class DialogueManager(object):
         
         # Intent recognition
         
-        # Load pickled files here to save memory
-        self.intent_recognizer = unpickle_file(self.paths['INTENT_RECOGNIZER'])
-        self.tfidf_vectorizer = unpickle_file(self.paths['TFIDF_VECTORIZER'])
-        
+        ## Load pickled files here to save memory
         prepared_question = text_prepare(question)
         features = self.tfidf_vectorizer.transform([prepared_question])
         intent = self.intent_recognizer.predict(features)[0]
-                
+      
         # Chit-chat part:   
         if intent == 'dialogue':            
             # Pass question to chitchat_bot to generate a response.       

@@ -15,7 +15,7 @@ RESOURCE_PATH = {
     'TFIDF_VECTORIZER': 'tfidf_vectorizer.pkl',
     'THREAD_EMBEDDINGS_FOLDER': 'thread_embeddings_by_tags',
     'WORD_EMBEDDINGS': '../week3/data/starspace/testModel_w2vf.txt',
-    'CHATTERBOT_LISTTRAINDATA': 'movie_conversations_4movies.txt'
+    'CHATTERBOT_LISTTRAINDATA': 'movie_conversations_20movies.txt'
 }
 
 
