@@ -49,7 +49,7 @@ class DialogueManager(object):
         self.tag_classifier = unpickle_file(paths['TAG_CLASSIFIER'])
         self.thread_ranker = ThreadRanker(paths)
         
-        # Bot
+        # Bot part:
         self.create_chitchat_bot(paths['CHATTERBOT_LISTTRAINDATA'])
        
 
@@ -79,9 +79,6 @@ class DialogueManager(object):
        
     def generate_answer(self, question):
         """Combines stackoverflow and chitchat parts using intent recognition."""
-
-        # Recognize intent of the question using `intent_recognizer`.
-        # Don't forget to prepare question and calculate features for the question.
         
         prepared_question = text_prepare(question)
         features = self.tfidf_vectorizer.transform([prepared_question])
