@@ -71,11 +71,6 @@ class DialogueManager(object):
                                 {"import_path": "chatterbot.logic.BestMatch",
                                  'maximum_similarity_threshold': 0.80,
                                   "statement_comparison_function": levenshtein_distance                                                   }
-                                ,    
-                                # also support logical operations 
-                                {"import_path": 'chatterbot.logic.MathematicalEvaluation',
-                                 'maximum_similarity_threshold': 0.70
-                                }    
                              ], response_selection_method=get_random_response)
         
         trainer = ChatterBotCorpusTrainer(self.bot)
