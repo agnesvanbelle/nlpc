@@ -2,7 +2,7 @@ backports.weakref==1.0.post1
 bleach==1.5.0
 certifi==2017.11.5
 chardet==3.0.4
-ChatterBot==0.7.6
+ChatterBot==1.0.0a1
 decorator==4.1.2
 entrypoints==0.2.3
 enum34==1.1.6
