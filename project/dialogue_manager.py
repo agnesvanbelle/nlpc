@@ -47,7 +47,9 @@ class ThreadRanker(object):
 class DialogueManager(object):
     def __init__(self, paths):
         print("Loading resources...")
-
+        
+        self.paths = paths
+        
         self.ANSWER_TEMPLATE = "I think its about {:s}.\n" + \
                     "For this problem this thread might help you: https://stackoverflow.com/questions/{:d} "
 
@@ -87,8 +89,8 @@ class DialogueManager(object):
         """Combines stackoverflow and chitchat parts using intent recognition."""
         
         # Intent recognition:
-        self.intent_recognizer = unpickle_file(paths['INTENT_RECOGNIZER'])
-        self.tfidf_vectorizer = unpickle_file(paths['TFIDF_VECTORIZER'])
+        self.intent_recognizer = unpickle_file(self.paths['INTENT_RECOGNIZER'])
+        self.tfidf_vectorizer = unpickle_file(self.paths['TFIDF_VECTORIZER'])
         
         prepared_question = text_prepare(question)
         features = self.tfidf_vectorizer.transform([prepared_question])
