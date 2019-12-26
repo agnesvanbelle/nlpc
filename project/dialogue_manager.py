@@ -74,10 +74,13 @@ class DialogueManager(object):
                              ], response_selection_method=get_random_response)
         
         trainer = ChatterBotCorpusTrainer(self.bot)
-        # Don't train on the whole corpus, only relevant parts, to be faster when replying
+
         trainer.train(  'chatterbot.corpus.english.greetings',
                         'chatterbot.corpus.english.conversations',
                         'chatterbot.corpus.english.emotion',
+                        'chatterbot.corpus.english.ai',
+                        'chatterbot.corpus.english.gossip',
+                        'chatterbot.corpus.english.humor',
                         'chatterbot.corpus.english.psychology',
                         'chatterbot.corpus.english.science',
                         'chatterbot.corpus.english.trivia',
